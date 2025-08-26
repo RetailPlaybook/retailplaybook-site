@@ -4,11 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Retail Playbook CMS</title>
+
+    <!-- IMPORTANT: manual init before loading the CMS -->
+    <script>window.CMS_MANUAL_INIT = true;</script>
   </head>
   <body>
+    <!-- Explicit mount node -->
     <div id="nc-root"></div>
 
-    <!-- Helper: capture token from popup or hash and store it -->
+    <!-- Helper: capture token from popup OR URL hash, save to storage -->
     <script>
       (function () {
         function saveToken(t) {
@@ -17,7 +21,7 @@
           localStorage.setItem('netlify-cms.user', JSON.stringify(user));
           localStorage.setItem('decap-cms.user', JSON.stringify(user));
         }
-        // 1) From popup message
+        // from popup
         window.addEventListener('message', function (e) {
           var s = String(e.data || '');
           if (s.includes('authorization:github:success:')) {
@@ -26,11 +30,10 @@
             location.reload();
           }
         });
-        // 2) From URL hash fallback (/admin/#access_token=...)
+        // from fallback hash (/admin/#access_token=...)
         var m = location.hash.match(/access_token=([^&]+)/);
         if (m && m[1]) {
           saveToken(decodeURIComponent(m[1]));
-          // clean hash then reload
           history.replaceState(null, '', location.pathname);
           location.reload();
         }
@@ -39,5 +42,74 @@
 
     <!-- Load Decap once -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
+
+    <!-- Manual CMS init: EDIT REPO + WORKER URL ONLY -->
+    <script>
+      (function () {
+        const REPO = "RetailPlaybook/retailplaybook-site"; // <-- exact Owner/Repo, case-sensitive
+        const WORKER_BASE_URL = "https://rp-cms-auth.james-c4d.workers.dev"; // <-- your Worker root
+
+        CMS.init({
+          config: {
+            backend: {
+              name: "github",
+              repo: REPO,
+              branch: "main",
+              base_url: WORKER_BASE_URL,
+              auth_endpoint: "/auth"
+            },
+            media_folder: "assets/uploads",
+            public_folder: "/assets/uploads",
+            collections: [
+              {
+                name: "posts",
+                label: "Posts",
+                folder: "posts",
+                create: true,
+                slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+                extension: "html",
+                format: "frontmatter",
+                fields: [
+                  { label: "Title", name: "title", widget: "string" },
+                  { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" },
+                  { label: "Summary", name: "summary", widget: "text", required: false },
+                  { label: "Cover Image", name: "image", widget: "image", required: false },
+                  { label: "Tags", name: "tags", widget: "list", required: false },
+                  { label: "Body (Markdown)", name: "body", widget: "markdown" }
+                ]
+              },
+              {
+                name: "registry",
+                label: "Publications List",
+                files: [
+                  {
+                    file: "posts/posts.json",
+                    label: "Homepage Publications",
+                    name: "publications",
+                    format: "json",
+                    fields: [
+                      {
+                        label: "Items",
+                        name: "items",
+                        widget: "list",
+                        fields: [
+                          { label: "Title", name: "title", widget: "string" },
+                          { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" },
+                          { label: "Summary", name: "summary", widget: "text", required: false },
+                          { label: "URL", name: "url", widget: "string" },
+                          { label: "Image", name: "image", widget: "image", required: false },
+                          { label: "Tags", name: "tags", widget: "list", required: false }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        });
+      })();
+    </script>
   </body>
 </html>
+
