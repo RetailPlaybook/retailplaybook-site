@@ -6,77 +6,8 @@
     <title>Retail Playbook CMS</title>
   </head>
   <body>
-    <!-- Load Decap CMS -->
+    <div id="nc-root"></div>
+    <!-- Load Decap ONCE. No CMS.init() here. -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
-
-    <!-- Manual init so we don't depend on loading config.yml separately -->
-    <script>
-      window.CMS_MANUAL_INIT = true;
-
-      // --- EDIT THESE TWO VALUES ---
-      const REPO = "retailplaybook/retailplaybook-site";  // e.g., RetailPlaybook/retailplaybook-site
-      const WORKER_BASE_URL = "https://rp-cms-auth.james-c4d.workers.dev";
-      // -----------------------------
-
-      CMS.init({
-        config: {
-          backend: {
-            name: "github",
-            repo: REPO,
-            branch: "main",
-            base_url: WORKER_BASE_URL,
-            auth_endpoint: "/auth"
-          },
-          media_folder: "assets/uploads",
-          public_folder: "/assets/uploads",
-          collections: [
-            {
-              name: "posts",
-              label: "Posts",
-              folder: "posts",
-              create: true,
-              slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
-              extension: "html",
-              format: "frontmatter",
-              fields: [
-                { label: "Title", name: "title", widget: "string" },
-                { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" },
-                { label: "Summary", name: "summary", widget: "text", required: false },
-                { label: "Cover Image", name: "image", widget: "image", required: false },
-                { label: "Tags", name: "tags", widget: "list", required: false },
-                { label: "Body (Markdown)", name: "body", widget: "markdown" }
-              ]
-            },
-            {
-              name: "registry",
-              label: "Publications List",
-              files: [
-                {
-                  file: "posts/posts.json",
-                  label: "Homepage Publications",
-                  name: "publications",
-                  format: "json",
-                  fields: [
-                    {
-                      label: "Items",
-                      name: "items",
-                      widget: "list",
-                      fields: [
-                        { label: "Title", name: "title", widget: "string" },
-                        { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" },
-                        { label: "Summary", name: "summary", widget: "text", required: false },
-                        { label: "URL", name: "url", widget: "string" },
-                        { label: "Image", name: "image", widget: "image", required: false },
-                        { label: "Tags", name: "tags", widget: "list", required: false }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      });
-    </script>
   </body>
 </html>
