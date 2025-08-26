@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Retail Playbook CMS</title>
-    <!-- Tell Decap not to auto-load a YAML config -->
+    <!-- Stop auto YAML init -->
     <script>window.CMS_MANUAL_INIT = true;</script>
   </head>
   <body>
@@ -22,14 +22,14 @@
         window.addEventListener('message', function (e) {
           var s = String(e.data || '');
           if (s.includes('authorization:github:success:')) {
-            console.log('[CMS] token received via postMessage');
+            console.log('[CMS] token via postMessage');
             saveToken(s.split('authorization:github:success:')[1].trim());
             location.reload();
           }
         });
         var m = location.hash.match(/access_token=([^&]+)/);
         if (m && m[1]) {
-          console.log('[CMS] token found in URL hash');
+          console.log('[CMS] token in hash');
           saveToken(decodeURIComponent(m[1]));
           history.replaceState(null,'',location.pathname);
           location.reload();
@@ -37,16 +37,22 @@
       })();
     </script>
 
-    <!-- Load Decap CMS once -->
+    <!-- Load Decap ONCE -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
 
-    <!-- Robust manual init: wait until CMS is ready, then init -->
+    <!-- Guarded manual init (runs exactly once) -->
     <script>
       (function () {
-        const REPO = "RetailPlaybook/retailplaybook-site";       // <— exact Owner/Repo (case-sensitive)
+        const REPO = "RetailPlaybook/retailplaybook-site";     // exact Owner/Repo
         const WORKER_BASE_URL = "https://rp-cms-auth.james-c4d.workers.dev";
 
-        function initCMS() {
+        function doInit() {
+          if (window.__CMS_INITED__) {
+            console.warn('[CMS] init skipped (already ran)');
+            return;
+          }
+          window.__CMS_INITED__ = true;
+
           console.log('[CMS] init starting…');
           CMS.init({
             config: {
@@ -81,34 +87,34 @@
             }
           });
 
-          // prove init succeeded
           setTimeout(() => {
             try {
               const names = CMS.getConfig().get('collections').map(c => c.get('name')).toJS();
               console.log('[CMS] init complete; collections:', names);
             } catch (e) {
-              console.error('[CMS] init failed to read config:', e.message);
+              console.error('[CMS] getConfig after init failed:', e.message);
             }
           }, 400);
         }
 
-        // wait for Decap to be present, then init (max 10s)
+        // Wait for CMS to load once, then init (with guard)
         const start = Date.now();
-        (function waitForCMS() {
+        (function wait() {
           if (typeof window.CMS !== 'undefined' && CMS && CMS.init) {
             console.log('[CMS] library ready, proceeding to init');
-            initCMS();
+            doInit();
             return;
           }
           if (Date.now() - start > 10000) {
             console.error('[CMS] decap-cms never loaded within 10s');
             return;
           }
-          setTimeout(waitForCMS, 100);
+          setTimeout(wait, 100);
         })();
       })();
     </script>
   </body>
 </html>
+
 
 
