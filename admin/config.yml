@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: retailplaybook/retailplaybook-site         # e.g., RetailPlaybook/retailplaybook-site
+  repo: RetailPlaybook/retailplaybook-site    # ← change if different
   branch: main
   base_url: https://rp-cms-auth.james-c4d.workers.dev
   auth_endpoint: /auth
@@ -9,7 +9,7 @@ media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
 collections:
-  - name: "posts"                      # ← unique
+  - name: "posts"
     label: "Posts"
     folder: "posts"
     create: true
@@ -24,7 +24,7 @@ collections:
       - { label: "Tags", name: "tags", widget: "list", required: false }
       - { label: "Body (Markdown)", name: "body", widget: "markdown" }
 
-  - name: "registry"                   # ← unique
+  - name: "registry"
     label: "Publications List"
     files:
       - file: "posts/posts.json"
