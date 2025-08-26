@@ -7,7 +7,37 @@
   </head>
   <body>
     <div id="nc-root"></div>
-    <!-- Load Decap ONCE. No CMS.init() here. -->
+
+    <!-- Helper: capture token from popup or hash and store it -->
+    <script>
+      (function () {
+        function saveToken(t) {
+          if (!t) return;
+          const user = { backendName: 'github', login: 'github', token: t };
+          localStorage.setItem('netlify-cms.user', JSON.stringify(user));
+          localStorage.setItem('decap-cms.user', JSON.stringify(user));
+        }
+        // 1) From popup message
+        window.addEventListener('message', function (e) {
+          var s = String(e.data || '');
+          if (s.includes('authorization:github:success:')) {
+            var tok = s.split('authorization:github:success:')[1].trim();
+            saveToken(tok);
+            location.reload();
+          }
+        });
+        // 2) From URL hash fallback (/admin/#access_token=...)
+        var m = location.hash.match(/access_token=([^&]+)/);
+        if (m && m[1]) {
+          saveToken(decodeURIComponent(m[1]));
+          // clean hash then reload
+          history.replaceState(null, '', location.pathname);
+          location.reload();
+        }
+      })();
+    </script>
+
+    <!-- Load Decap once -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
   </body>
 </html>
