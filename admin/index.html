@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Retail Playbook CMS</title>
-    <!-- Tell Decap not to auto-init from config.yml -->
+    <!-- Tell Decap not to auto-load a YAML config -->
     <script>window.CMS_MANUAL_INIT = true;</script>
   </head>
   <body>
@@ -22,42 +22,32 @@
         window.addEventListener('message', function (e) {
           var s = String(e.data || '');
           if (s.includes('authorization:github:success:')) {
+            console.log('[CMS] token received via postMessage');
             saveToken(s.split('authorization:github:success:')[1].trim());
             location.reload();
           }
         });
         var m = location.hash.match(/access_token=([^&]+)/);
-        if (m && m[1]) { saveToken(decodeURIComponent(m[1])); history.replaceState(null,'',location.pathname); location.reload(); }
+        if (m && m[1]) {
+          console.log('[CMS] token found in URL hash');
+          saveToken(decodeURIComponent(m[1]));
+          history.replaceState(null,'',location.pathname);
+          location.reload();
+        }
       })();
     </script>
 
-    <!-- Load Decap CMS from jsDelivr -->
+    <!-- Load Decap CMS once -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
 
-    <!-- Fallback: if CMS didn't load in time, pull from unpkg (just once) -->
-    <script>
-      (function fallbackLoader(){
-        setTimeout(function(){
-          if (!window.CMS && !window.__cms_fallback_loaded) {
-            window.__cms_fallback_loaded = true;
-            var s = document.createElement('script');
-            s.src = 'https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js';
-            document.body.appendChild(s);
-          }
-        }, 1500);
-      })();
-    </script>
-
-    <!-- Wait for CMS to be available, then init ONCE -->
+    <!-- Robust manual init: wait until CMS is ready, then init -->
     <script>
       (function () {
-        const REPO = "RetailPlaybook/retailplaybook-site"; // <- exact Owner/Repo (case-sensitive)
+        const REPO = "RetailPlaybook/retailplaybook-site";       // <— exact Owner/Repo (case-sensitive)
         const WORKER_BASE_URL = "https://rp-cms-auth.james-c4d.workers.dev";
 
-        function startCMS() {
-          if (window.__cms_started) return; // guard against double init
-          window.__cms_started = true;
-
+        function initCMS() {
+          console.log('[CMS] init starting…');
           CMS.init({
             config: {
               backend: {
@@ -79,38 +69,46 @@
                   extension: "html",
                   format: "frontmatter",
                   fields: [
-                    { label: "Title", name: "title", widget: "string" },
-                    { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" },
-                    { label: "Summary", name: "summary", widget: "text", required: false },
-                    { label: "Cover Image", name: "image", widget: "image", required: false },
-                    { label: "Tags", name: "tags", widget: "list", required: false },
-                    { label: "Body (Markdown)", name: "body", widget: "markdown" }
+                    { label: "Title",   name: "title",   widget: "string" },
+                    { label: "Date",    name: "date",    widget: "date",  format: "YYYY-MM-DD" },
+                    { label: "Summary", name: "summary", widget: "text",  required: false },
+                    { label: "Cover",   name: "image",   widget: "image", required: false },
+                    { label: "Tags",    name: "tags",    widget: "list",  required: false },
+                    { label: "Body",    name: "body",    widget: "markdown" }
                   ]
                 }
               ]
             }
           });
 
-          // simple proof it ran
+          // prove init succeeded
           setTimeout(() => {
             try {
               const names = CMS.getConfig().get('collections').map(c => c.get('name')).toJS();
               console.log('[CMS] init complete; collections:', names);
             } catch (e) {
-              console.log('[CMS] init not ready:', e.message);
+              console.error('[CMS] init failed to read config:', e.message);
             }
-          }, 300);
+          }, 400);
         }
 
-        (function waitForCMS(){
-          if (window.CMS && typeof CMS.init === 'function') {
-            startCMS();
-          } else {
-            setTimeout(waitForCMS, 50);
+        // wait for Decap to be present, then init (max 10s)
+        const start = Date.now();
+        (function waitForCMS() {
+          if (typeof window.CMS !== 'undefined' && CMS && CMS.init) {
+            console.log('[CMS] library ready, proceeding to init');
+            initCMS();
+            return;
           }
+          if (Date.now() - start > 10000) {
+            console.error('[CMS] decap-cms never loaded within 10s');
+            return;
+          }
+          setTimeout(waitForCMS, 100);
         })();
       })();
     </script>
   </body>
 </html>
+
 
