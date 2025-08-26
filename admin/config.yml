@@ -1,39 +1,30 @@
 backend:
   name: github
-  repo: retailplaybook/retailplaybook-site
+  repo: retailplaybook/retailplaybook-site         # e.g., RetailPlaybook/retailplaybook-site
   branch: main
   base_url: https://rp-cms-auth.james-c4d.workers.dev
   auth_endpoint: /auth
 
-
-site_url: https://retailplaybook.co
-display_url: https://retailplaybook.co
-logo_url: /assets/FullLogo.png
-
-media_folder: "assets/uploads"      # files stored in repo
-public_folder: "/assets/uploads"    # how the site accesses them
-
-publish_mode: editorial_workflow     # optional: draft → review → publish
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
 
 collections:
-  # 1) POSTS: stored as HTML files under /posts
-  - name: "posts"
+  - name: "posts"                      # ← unique
     label: "Posts"
     folder: "posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     extension: "html"
-    format: "frontmatter"   # store frontmatter + HTML body
+    format: "frontmatter"
     fields:
       - { label: "Title", name: "title", widget: "string" }
-      - { label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DD" }
+      - { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" }
       - { label: "Summary", name: "summary", widget: "text", required: false }
       - { label: "Cover Image", name: "image", widget: "image", required: false }
       - { label: "Tags", name: "tags", widget: "list", required: false }
-      - { label: "Body (HTML)", name: "body", widget: "markdown" }  # you can paste HTML or write markdown; it saves as HTML
+      - { label: "Body (Markdown)", name: "body", widget: "markdown" }
 
-  # 2) PUBLICATIONS registry: edits posts/posts.json used on homepage
-  - name: "registry"
+  - name: "registry"                   # ← unique
     label: "Publications List"
     files:
       - file: "posts/posts.json"
@@ -44,11 +35,10 @@ collections:
           - label: "Items"
             name: "items"
             widget: "list"
-            summary: "{{fields.title}} ({{fields.date}})"
             fields:
               - { label: "Title", name: "title", widget: "string" }
               - { label: "Date", name: "date", widget: "date", format: "YYYY-MM-DD" }
               - { label: "Summary", name: "summary", widget: "text", required: false }
-              - { label: "URL", name: "url", widget: "string" }        # e.g., /posts/2025-08-23-kpi-stack-avt.html
+              - { label: "URL", name: "url", widget: "string" }
               - { label: "Image", name: "image", widget: "image", required: false }
               - { label: "Tags", name: "tags", widget: "list", required: false }
