@@ -9,57 +9,45 @@
   <body>
     <div id="nc-root"></div>
 
-    <!-- Load Decap exactly once -->
-    <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
+<!-- 1. Load Decap CMS library -->
+<script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 
-    <!-- Minimal single init (ONE collection) -->
-    <script>
-      (function () {
-        const REPO = "RetailPlaybook/retailplaybook-site";
-        const WORKER_BASE_URL = "https://rp-cms-auth.james-c4d.workers.dev";
+<!-- 2. Disable auto-init -->
+<script>
+  window.CMS_MANUAL_INIT = true;
+</script>
 
-        if (typeof CMS === "undefined") {
-          console.error("[CMS] library failed to load");
-        } else {
-          console.log("[CMS] single init on /cms");
-          CMS.init({
-            config: {
-              backend: {
-                name: "github",
-                repo: REPO,
-                branch: "main",
-                base_url: WORKER_BASE_URL,
-                auth_endpoint: "/auth"
-              },
-              media_folder: "assets/uploads",
-              public_folder: "/assets/uploads",
-              collections: [
-                {
-                  name: "alpha",
-                  label: "Alpha",
-                  files: [
-                    {
-                      file: "posts/posts.json",
-                      label: "Dummy",
-                      name: "dummy",
-                      fields: [{ label: "Title", name: "title", widget: "string" }]
-                    }
-                  ]
-                }
-              ]
-            }
-          });
-
-          setTimeout(() => {
-            try {
-              const names = CMS.getConfig().get("collections").map(c => c.get("name")).toJS();
-              console.log("[CMS] collections =", names);
-            } catch (e) {
-              console.error("[CMS] getConfig failed:", e.message);
-            }
-          }, 400);
+<!-- 3. Manual init -->
+<script>
+  CMS.init({
+    config: {
+      backend: {
+        name: "github",
+        repo: "RetailPlaybook/retailplaybook-site", // replace with your exact owner/repo
+        branch: "main",
+        base_url: "https://rp-cms-auth.james-c4d.workers.dev",
+        auth_endpoint: "/auth"
+      },
+      media_folder: "assets/uploads",
+      public_folder: "/assets/uploads",
+      collections: [
+        {
+          name: "posts",
+          label: "Posts",
+          folder: "posts",
+          create: true,
+          slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+          extension: "html",
+          format: "frontmatter",
+          fields: [
+            { label: "Title", name: "title", widget: "string" },
+            { label: "Date", name: "date", widget: "datetime" },
+            { label: "Body", name: "body", widget: "markdown" }
+          ]
         }
-      })();
-    </script>
+      ]
+    }
+  });
+</script>
   </body>
 </html>
