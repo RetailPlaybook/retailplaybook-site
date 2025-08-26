@@ -3,57 +3,25 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Retail Playbook CMS</title>
-    <!-- Stop auto YAML init -->
+    <title>Retail Playbook CMS (clean)</title>
     <script>window.CMS_MANUAL_INIT = true;</script>
   </head>
   <body>
     <div id="nc-root"></div>
 
-    <!-- Helper: capture token from popup/hash and persist -->
-    <script>
-      (function () {
-        function saveToken(t) {
-          if (!t) return;
-          const user = { backendName: 'github', login: 'github', token: t };
-          localStorage.setItem('netlify-cms.user', JSON.stringify(user));
-          localStorage.setItem('decap-cms.user', JSON.stringify(user));
-        }
-        window.addEventListener('message', function (e) {
-          var s = String(e.data || '');
-          if (s.includes('authorization:github:success:')) {
-            console.log('[CMS] token via postMessage');
-            saveToken(s.split('authorization:github:success:')[1].trim());
-            location.reload();
-          }
-        });
-        var m = location.hash.match(/access_token=([^&]+)/);
-        if (m && m[1]) {
-          console.log('[CMS] token in hash');
-          saveToken(decodeURIComponent(m[1]));
-          history.replaceState(null,'',location.pathname);
-          location.reload();
-        }
-      })();
-    </script>
-
-    <!-- Load Decap ONCE -->
+    <!-- Load Decap exactly once -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
 
-    <!-- Guarded manual init (runs exactly once) -->
+    <!-- Minimal single init (ONE collection) -->
     <script>
       (function () {
-        const REPO = "RetailPlaybook/retailplaybook-site";     // exact Owner/Repo
+        const REPO = "RetailPlaybook/retailplaybook-site";
         const WORKER_BASE_URL = "https://rp-cms-auth.james-c4d.workers.dev";
 
-        function doInit() {
-          if (window.__CMS_INITED__) {
-            console.warn('[CMS] init skipped (already ran)');
-            return;
-          }
-          window.__CMS_INITED__ = true;
-
-          console.log('[CMS] init starting…');
+        if (typeof CMS === "undefined") {
+          console.error("[CMS] library failed to load");
+        } else {
+          console.log("[CMS] single init on /cms");
           CMS.init({
             config: {
               backend: {
@@ -67,20 +35,15 @@
               public_folder: "/assets/uploads",
               collections: [
                 {
-                  name: "posts",
-                  label: "Posts",
-                  folder: "posts",
-                  create: true,
-                  slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
-                  extension: "html",
-                  format: "frontmatter",
-                  fields: [
-                    { label: "Title",   name: "title",   widget: "string" },
-                    { label: "Date",    name: "date",    widget: "date",  format: "YYYY-MM-DD" },
-                    { label: "Summary", name: "summary", widget: "text",  required: false },
-                    { label: "Cover",   name: "image",   widget: "image", required: false },
-                    { label: "Tags",    name: "tags",    widget: "list",  required: false },
-                    { label: "Body",    name: "body",    widget: "markdown" }
+                  name: "alpha",
+                  label: "Alpha",
+                  files: [
+                    {
+                      file: "posts/posts.json",
+                      label: "Dummy",
+                      name: "dummy",
+                      fields: [{ label: "Title", name: "title", widget: "string" }]
+                    }
                   ]
                 }
               ]
@@ -89,32 +52,14 @@
 
           setTimeout(() => {
             try {
-              const names = CMS.getConfig().get('collections').map(c => c.get('name')).toJS();
-              console.log('[CMS] init complete; collections:', names);
+              const names = CMS.getConfig().get("collections").map(c => c.get("name")).toJS();
+              console.log("[CMS] collections =", names);
             } catch (e) {
-              console.error('[CMS] getConfig after init failed:', e.message);
+              console.error("[CMS] getConfig failed:", e.message);
             }
           }, 400);
         }
-
-        // Wait for CMS to load once, then init (with guard)
-        const start = Date.now();
-        (function wait() {
-          if (typeof window.CMS !== 'undefined' && CMS && CMS.init) {
-            console.log('[CMS] library ready, proceeding to init');
-            doInit();
-            return;
-          }
-          if (Date.now() - start > 10000) {
-            console.error('[CMS] decap-cms never loaded within 10s');
-            return;
-          }
-          setTimeout(wait, 100);
-        })();
       })();
     </script>
   </body>
 </html>
-
-
-
