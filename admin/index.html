@@ -2,11 +2,91 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Retail Playbook CMS</title>
+    <!-- Disable YAML auto-init BEFORE loading CMS -->
+    <script>window.CMS_MANUAL_INIT = true;</script>
   </head>
   <body>
-    <!-- Decap CMS app (no manual init) -->
+    <div id="nc-root"></div>
+
+    <!-- 1) Capture token from popup or URL hash and persist exactly how Decap expects -->
+    <script>
+      (function () {
+        function saveToken(token) {
+          if (!token) return;
+          const user = { backendName: 'github', login: 'github', token: token };
+          localStorage.setItem('decap-cms.user', JSON.stringify(user));
+          localStorage.setItem('netlify-cms.user', JSON.stringify(user));
+        }
+
+        // receive from Cloudflare worker popup
+        window.addEventListener('message', function (e) {
+          const s = String(e.data || '');
+          if (s.startsWith('authorization:github:success:')) {
+            const token = s.split('authorization:github:success:')[1].trim();
+            saveToken(token);
+            location.reload();
+          }
+        });
+
+        // support hash-style token (not required, but harmless)
+        const m = location.hash.match(/access_token=([^&]+)/);
+        if (m && m[1]) {
+          saveToken(decodeURIComponent(m[1]));
+          history.replaceState(null, '', location.pathname);
+          location.reload();
+        }
+      })();
+    </script>
+
+    <!-- 2) Load Decap CMS exactly once -->
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3/dist/decap-cms.js"></script>
+
+    <!-- 3) Single, guarded manual init that cannot run twice -->
+    <script>
+      (function () {
+        const REPO   = "RetailPlaybook/retailplaybook-site";      // <— your exact Owner/Repo
+        const WORKER = "https://rp-cms-auth.james-c4d.workers.dev"; // <— your worker base
+
+        function initOnce() {
+          if (window.__CMS_INITED__) { console.warn('[CMS] init skipped'); return; }
+          window.__CMS_INITED__ = true;
+
+          CMS.init({
+            config: {
+              backend: { name: "github", repo: REPO, branch: "main", base_url: WORKER, auth_endpoint: "/auth" },
+              media_folder: "assets/uploads",
+              public_folder: "/assets/uploads",
+              collections: [
+                {
+                  name: "posts",
+                  label: "Posts",
+                  folder: "posts",
+                  create: true,
+                  slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+                  extension: "html",
+                  format: "frontmatter",
+                  fields: [
+                    { label: "Title",   name: "title",   widget: "string" },
+                    { label: "Date",    name: "date",    widget: "datetime" },
+                    { label: "Summary", name: "summary", widget: "text", required: false },
+                    { label: "Body",    name: "body",    widget: "markdown" }
+                  ]
+                }
+              ]
+            }
+          });
+        }
+
+        // wait until CMS bundle is present, then init once
+        const start = Date.now();
+        (function wait() {
+          if (typeof window.CMS !== 'undefined' && CMS && CMS.init) { initOnce(); return; }
+          if (Date.now() - start > 10000) { console.error('[CMS] decap-cms never loaded'); return; }
+          setTimeout(wait, 100);
+        })();
+      })();
+    </script>
   </body>
 </html>
