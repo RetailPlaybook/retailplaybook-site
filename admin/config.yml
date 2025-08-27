@@ -1,7 +1,8 @@
 backend:
   name: github
-  repo: RetailPlaybook/retailplaybook-site   # replace with your exact repo
+  repo: ReailPlaybook/retailplaybook-site   # <-- your actual repo
   branch: main
+  base_url: https://rp-cms-auth.james-c4d.workers.dev  # <-- your Worker URL
 
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
@@ -17,3 +18,4 @@ collections:
       - { label: "Date", name: "date", widget: "datetime" }
       - { label: "Summary", name: "summary", widget: "text" }
       - { label: "Body", name: "body", widget: "markdown" }
+
