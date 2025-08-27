@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: ReailPlaybook/retailplaybook-site   # <-- your actual repo
+  repo: RetailPlaybook/retailplaybook-site   # <-- your actual repo
   branch: main
   base_url: https://rp-cms-auth.james-c4d.workers.dev  # <-- your Worker URL
 
