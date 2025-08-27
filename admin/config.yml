@@ -1,12 +1,12 @@
 backend:
   name: github
-  repo: RetailPlaybook/retailplaybook-site   # your GitHub repo (Owner/Repo)
+  repo: RetailPlaybook/retailplaybook-site
   branch: main
   base_url: https://rp-cms-auth.james-c4d.workers.dev
   auth_endpoint: /auth
 
-media_folder: "assets/uploads"    # where uploaded files are stored in repo
-public_folder: "/assets/uploads"  # how they are served on site
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
 
 collections:
   - name: "posts"
@@ -14,10 +14,11 @@ collections:
     folder: "posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    extension: "md"
+    extension: "html"
     format: "frontmatter"
     fields:
       - { label: "Title",   name: "title",   widget: "string" }
       - { label: "Date",    name: "date",    widget: "datetime" }
-      - { label: "Summary", name: "summary", widget: "text" }
+      - { label: "Summary", name: "summary", widget: "text", required: false }
       - { label: "Body",    name: "body",    widget: "markdown" }
+
