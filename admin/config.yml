@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: jameshuangy/retailplaybook-site   # replace with your exact repo
+  repo: RetailPlaybook/retailplaybook-site   # replace with your exact repo
   branch: main
 
 media_folder: "assets/uploads"
