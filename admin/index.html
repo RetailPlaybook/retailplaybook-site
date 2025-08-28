@@ -1,44 +1,5 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Retail Playbook CMS</title>
+<meta charset="utf-8">
+<title>Retail Playbook CMS</title>
+<script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
 
-    <!-- Tell Decap we will call CMS.init() ourselves -->
-    <script>window.CMS_MANUAL_INIT = true;</script>
-
-    <!-- Load CURRENT Decap -->
-    <script src="https://unpkg.com/decap-cms@3.8.3/dist/decap-cms.js"></script>
-  </head>
-  <body>
-    <script>
-      // Kick Decap once it's loaded; it will automatically fetch /admin/config.yml
-      (function boot() {
-        if (window.CMS && CMS.init) {
-          CMS.init(); // reads /admin/config.yml
-          return;
-        }
-        setTimeout(boot, 50);
-      })();
-    </script>
-    <script>
-  // Catch the OAuth popup message and store it the way Decap expects.
-  window.addEventListener('message', (e) => {
-    if (typeof e.data === 'string' && e.data.startsWith('authorization:github:success:')) {
-      const token = e.data.split(':').pop();
-      try {
-        localStorage.setItem(
-          'decap-cms.user',
-          JSON.stringify({ backendName: 'github', login: 'github', token })
-        );
-        // Refresh so Decap sees the saved session and builds the sidebar
-        location.reload();
-      } catch (err) {
-        console.error('Failed to save token:', err);
-      }
-    }
-  }, false);
-</script>
-  </body>
-</html>

@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: RetailPlaybook/retailplaybook-site   # exact owner/repo
+  repo: RetailPlaybook/retailplaybook-site   # your exact repo
   branch: main
   base_url: https://rp-cms-auth.james-c4d.workers.dev
   auth_endpoint: /auth
@@ -14,9 +14,8 @@ collections:
     folder: "posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-    format: "frontmatter"
     fields:
       - { label: "Title",   name: "title",   widget: "string" }
       - { label: "Date",    name: "date",    widget: "datetime", format: "YYYY-MM-DD" }
-      - { label: "Summary", name: "summary", widget: "text", required: false }
+      - { label: "Summary", name: "summary", widget: "text" }
       - { label: "Body",    name: "body",    widget: "markdown" }
