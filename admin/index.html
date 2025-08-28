@@ -22,5 +22,23 @@
         setTimeout(boot, 50);
       })();
     </script>
+    <script>
+  // Catch the OAuth popup message and store it the way Decap expects.
+  window.addEventListener('message', (e) => {
+    if (typeof e.data === 'string' && e.data.startsWith('authorization:github:success:')) {
+      const token = e.data.split(':').pop();
+      try {
+        localStorage.setItem(
+          'decap-cms.user',
+          JSON.stringify({ backendName: 'github', login: 'github', token })
+        );
+        // Refresh so Decap sees the saved session and builds the sidebar
+        location.reload();
+      } catch (err) {
+        console.error('Failed to save token:', err);
+      }
+    }
+  }, false);
+</script>
   </body>
 </html>
