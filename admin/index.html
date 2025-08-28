@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Retail Playbook CMS – Debug</title>
+<script>window.CMS_MANUAL_INIT = true;</script>
+<script src="https://unpkg.com/decap-cms@3.8.3/dist/decap-cms.js"></script>
 <style>
   body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 16px; line-height: 1.4; }
   .ok { color: #1a7f37 } .warn { color: #b54708 } .err { color: #b42318 }
@@ -20,10 +22,10 @@
     <button id="btn-clear" type="button">Clear token</button>
   </div>
 
-  <!-- Load Decap once -->
-  <script src="https://unpkg.com/decap-cms@3.8.3/dist/decap-cms.js"></script>
-
   <script>
+  // global guard
+  if (!window.__CMS_INITED__) window.__CMS_INITED__ = false;
+
   const logEl = document.getElementById('log');
   const log = (msg, cls='') => {
     const p = document.createElement('div'); p.className = cls; p.innerHTML = msg; logEl.appendChild(p);
@@ -42,7 +44,7 @@
         log('No saved token in <code>localStorage</code>.', 'warn');
       }
 
-      // Fetch config.yml (what Decap needs)
+      // Fetch config.yml
       log('<b>Step 2:</b> Fetching <code>/admin/config.yml</code>…');
       let cfgStatus = 0, cfgType = '', cfgHead = '';
       try {
@@ -55,7 +57,7 @@
       log(`config.yml → status <b>${cfgStatus}</b>, type <code>${cfgType}</code><br><small>head:</small> <code>${cfgHead}</code>`,
           cfgStatus===200 ? 'ok' : 'err');
 
-      // Listen for Worker popup message and save token exactly how Decap expects
+      // Auth popup message
       window.addEventListener('message', (e) => {
         if (typeof e.data === 'string' && e.data.startsWith('authorization:github:success:')) {
           const token = e.data.split(':').pop();
@@ -67,7 +69,6 @@
             log('Failed to save token: '+String(err), 'err');
           }
         } else {
-          // surface unexpected messages for visibility
           log('Other message: <code>'+String(e.data)+'</code>');
         }
       }, false);
@@ -78,20 +79,30 @@
         window.open(url, 'decap-auth', 'width=960,height=800');
         log('Opened auth popup: <code>'+url+'</code>');
       };
+
       document.getElementById('btn-reinit').onclick = () => {
-        if (window.CMS && CMS.init) {
-          CMS.init(); log('Called CMS.init()', 'ok');
-        } else { log('CMS.init not available', 'err'); }
+        if (!window.__CMS_INITED__ && window.CMS && CMS.init) {
+          window.__CMS_INITED__ = true;
+          CMS.init(); log('CMS.init() called (manual reinit)', 'ok');
+        } else {
+          log('CMS.init skipped (already inited or not available)', 'warn');
+        }
       };
+
       document.getElementById('btn-clear').onclick = () => {
         localStorage.removeItem('decap-cms.user'); log('Cleared saved token', 'warn');
       };
 
-      // If token exists and config is 200 → init CMS
+      // Auto-start if token exists and config is OK
       if (raw && cfgStatus === 200) {
         log('<b>Step 3:</b> Starting CMS (token present, config OK)…');
-        try { CMS.init(); log('CMS.init() called', 'ok'); } catch (e) {
-          log('CMS.init threw: '+String(e), 'err');
+        if (!window.__CMS_INITED__ && window.CMS && CMS.init) {
+          window.__CMS_INITED__ = true;
+          try { CMS.init(); log('CMS.init() called (boot)', 'ok'); } catch (e) {
+            log('CMS.init threw: '+String(e), 'err');
+          }
+        } else {
+          log('CMS.init skipped (already inited)', 'warn');
         }
       } else if (cfgStatus !== 200) {
         log('Config not reachable as YAML. Ensure <code>/admin/config.yml</code> exists and is served as text/yaml.', 'err');
@@ -105,3 +116,4 @@
   </script>
 </body>
 </html>
+
